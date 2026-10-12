@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#000000">
+    <title>Opacha-mda</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            overflow: hidden;
+            overscroll-behavior: none;
+            touch-action: none;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #canvas {
+            display: block;
+            border: none;
+            outline: none;
+            touch-action: none;
+        }
+    </style>
+</head>
+<body oncontextmenu="return false">
+    <canvas id="canvas"></canvas>
+    <script>
+        // The game renders at a fixed resolution chosen at startup (see TeaVMLauncher).
+        // Here we only scale the canvas with CSS so it always fits the window
+        // while keeping its aspect ratio (window resize, mobile address bar, rotation).
+        (function () {
+            var canvas = document.getElementById("canvas");
+
+            function fit() {
+                if (!canvas.width || !canvas.height) return;
+                var vw = window.innerWidth, vh = window.innerHeight;
+                var scale = Math.min(vw / canvas.width, vh / canvas.height);
+                canvas.style.width = Math.floor(canvas.width * scale) + "px";
+                canvas.style.height = Math.floor(canvas.height * scale) + "px";
+            }
+
+            window.addEventListener("resize", fit);
+            window.addEventListener("orientationchange", fit);
+            new MutationObserver(fit).observe(canvas, { attributes: true, attributeFilter: ["width", "height"] });
+
+            // Keep pinch / ctrl+wheel from zooming the page itself
+            window.addEventListener("wheel", function (e) { if (e.ctrlKey) e.preventDefault(); }, { passive: false });
+            document.addEventListener("gesturestart", function (e) { e.preventDefault(); });
+            document.addEventListener("touchmove", function (e) { e.preventDefault(); }, { passive: false });
+        })();
+
+        window.addEventListener("load", function () { main(); });
+    </script>
+    <script src="app.js"></script>
+</body>
+</html>

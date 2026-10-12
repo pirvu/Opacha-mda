@@ -28,6 +28,7 @@ public class SoundManager {
 
 
     private static void startThread() {
+        if (YioGdxGame.platformType == PlatformType.web) return; // no background threads in browser
         soundThreadYio = new SoundThreadYio();
         soundThreadYio.start();
         soundThreadYio.setPriority(1);
@@ -49,6 +50,10 @@ public class SoundManager {
 
     public static void playSound(Sound sound) {
         if (!SettingsManager.getInstance().soundEnabled) return;
+        if (soundThreadYio == null) {
+            playSoundDirectly(sound);
+            return;
+        }
         soundThreadYio.playSound(sound);
     }
 

@@ -31,9 +31,9 @@ public class AtlasLoader {
         ArrayList<String> lines = new ArrayList<>();
         StringTokenizer stringTokenizer = new StringTokenizer(atlasStructure, "\n");
         while (stringTokenizer.hasMoreTokens()) {
-            String token = stringTokenizer.nextToken();
+            String token = stringTokenizer.nextToken().trim(); // works with both LF and CRLF line endings
             if (token.contains("rows=")) {
-                String s = token.substring(5, token.length() - 1);
+                String s = token.substring(5);
                 rows = Integer.parseInt(s);
             }
             if (token.length() > 5 && !token.contains("compression=") && !token.contains("rows="))
@@ -45,7 +45,7 @@ public class AtlasLoader {
             int charPos = line.indexOf("#");
             String fileName = line.substring(0, charPos);
             fileNames.add(fileName);
-            String sizeString = line.substring(charPos + 1, line.length() - 1);
+            String sizeString = line.substring(charPos + 1);
             int array[] = getArrayFromString(sizeString, 4);
             RectangleYio rect = new RectangleYio(array[0], array[1], array[2], array[3]);
             imageSpecs.add(rect);

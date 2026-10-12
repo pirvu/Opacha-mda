@@ -2,12 +2,11 @@ package yio.tro.opacha.menu;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import javax.xml.parsers.*;
-
-import org.w3c.dom.*;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.XmlReader;
 
 public class LanguagesManager {
     private static LanguagesManager _instance = null;
@@ -85,23 +84,11 @@ public class LanguagesManager {
         ArrayList<LanguageChooseItem> result = new ArrayList<>();
 
         try {
-            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-            DocumentBuilder db = dbf.newDocumentBuilder();
-            FileHandle fileHandle = Gdx.files.internal(LANGUAGES_FILE);
-            Document doc = db.parse(fileHandle.read());
-
-            Element root = doc.getDocumentElement();
-
-            NodeList languages = root.getElementsByTagName("language");
-            int numLanguages = languages.getLength();
-
-            for (int i = 0; i < numLanguages; i++) {
-                Node language = languages.item(i);
-
+            for (XmlReader.Element language : readLanguageNodes()) {
                 LanguageChooseItem chooseItem = new LanguageChooseItem();
-                chooseItem.name = language.getAttributes().getNamedItem("name").getTextContent();
-                chooseItem.title = language.getAttributes().getNamedItem("title").getTextContent();
-                chooseItem.author = language.getAttributes().getNamedItem("author").getTextContent();
+                chooseItem.name = language.getAttribute("name");
+                chooseItem.title = language.getAttribute("title");
+                chooseItem.author = language.getAttribute("author");
 
                 result.add(chooseItem);
             }
@@ -115,30 +102,12 @@ public class LanguagesManager {
 
     public boolean loadLanguage(String languageName) {
         try {
-            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-            DocumentBuilder db = dbf.newDocumentBuilder();
-            FileHandle fileHandle = Gdx.files.internal(LANGUAGES_FILE);
-            Document doc = db.parse(fileHandle.read());
-
-            Element root = doc.getDocumentElement();
-
-            NodeList languages = root.getElementsByTagName("language");
-            int numLanguages = languages.getLength();
-
-            for (int i = 0; i < numLanguages; ++i) {
-                Node languageNode = languages.item(i);
-
+            for (XmlReader.Element languageNode : readLanguageNodes()) {
                 if (!isTargetLanguageNode(languageName, languageNode)) continue;
                 _language.clear();
-                Element languageElement = (Element) languageNode;
-                NodeList strings = languageElement.getElementsByTagName("string");
-                int numStrings = strings.getLength();
-
-                for (int j = 0; j < numStrings; ++j) {
-                    NamedNodeMap attributes = strings.item(j).getAttributes();
-                    String key = attributes.getNamedItem("key").getTextContent();
-                    String value = attributes.getNamedItem("value").getTextContent();
-//                        System.out.println(value);
+                for (XmlReader.Element stringNode : languageNode.getChildrenByName("string")) {
+                    String key = stringNode.getAttribute("key");
+                    String value = stringNode.getAttribute("value");
                     value = value.replace("<br />", "\n");
                     _language.put(key, value);
                 }
@@ -154,13 +123,43 @@ public class LanguagesManager {
     }
 
 
-    private boolean isTargetLanguageNode(String langName, Node node) {
-        String name = node.getAttributes().getNamedItem("name").getTextContent();
-        Node secondNameNode = node.getAttributes().getNamedItem("second_name");
-        String secondName = "-";
-        if (secondNameNode != null) {
-            secondName = secondNameNode.getTextContent();
+    private Array<XmlReader.Element> readLanguageNodes() {
+        FileHandle fileHandle = Gdx.files.internal(LANGUAGES_FILE);
+        XmlReader.Element root = new XmlReader().parse(decodeText(fileHandle.readBytes()));
+        return root.getChildrenByName("language");
+    }
+
+
+    private String decodeText(byte[] bytes) {
+        // languages.xml is stored as UTF-16 with BOM, decode manually to avoid relying on charset support
+        if (bytes.length >= 2 && (bytes[0] & 0xFF) == 0xFF && (bytes[1] & 0xFF) == 0xFE) {
+            return decodeUtf16(bytes, false);
         }
+        if (bytes.length >= 2 && (bytes[0] & 0xFF) == 0xFE && (bytes[1] & 0xFF) == 0xFF) {
+            return decodeUtf16(bytes, true);
+        }
+        String text = new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
+        if (text.length() > 0 && text.charAt(0) == '\uFEFF') {
+            text = text.substring(1);
+        }
+        return text;
+    }
+
+
+    private String decodeUtf16(byte[] bytes, boolean bigEndian) {
+        char[] chars = new char[(bytes.length - 2) / 2];
+        for (int i = 0; i < chars.length; i++) {
+            int a = bytes[2 + 2 * i] & 0xFF;
+            int b = bytes[3 + 2 * i] & 0xFF;
+            chars[i] = (char) (bigEndian ? (a << 8) | b : (b << 8) | a);
+        }
+        return new String(chars);
+    }
+
+
+    private boolean isTargetLanguageNode(String langName, XmlReader.Element node) {
+        String name = node.getAttribute("name");
+        String secondName = node.getAttribute("second_name", "-");
         return langName.equals(name) || langName.equals(secondName);
     }
 }

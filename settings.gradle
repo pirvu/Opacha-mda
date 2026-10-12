@@ -1,0 +1,2 @@
+rootProject.name = 'opacha-mda'
+include 'core', 'teavm'

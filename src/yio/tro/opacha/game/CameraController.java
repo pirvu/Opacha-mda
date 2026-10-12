@@ -263,10 +263,11 @@ public class CameraController implements TouchableYio {
     public void onMouseWheelScrolled(int amount) {
         if (locked) return;
 
-        if (amount == 1) {
-            changeZoomLevel(0.5);
-        } else if (amount == -1) {
-            changeZoomLevel(-0.6);
+        // multiplicative steps feel consistent at any zoom level and with touchpads
+        if (amount > 0) {
+            changeZoomLevel(targetZoomLevel * 0.15);
+        } else if (amount < 0) {
+            changeZoomLevel(-targetZoomLevel * 0.13);
         }
     }
 
