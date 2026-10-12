@@ -597,6 +597,12 @@ public class YioGdxGame extends ApplicationAdapter implements InputProcessor {
 
 
     @Override
+    public boolean touchCancelled(int screenX, int screenY, int pointer, int button) {
+        return touchUp(screenX, screenY, pointer, button);
+    }
+
+
+    @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
         try {
             touchUpReaction(screenX, screenY, pointer, button);

@@ -8,4 +8,6 @@ public enum PlatformType {
 
     ios,
 
+    web,
+
 }
