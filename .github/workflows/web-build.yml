@@ -17,7 +17,34 @@ jobs:
         with:
           gradle-version: 8.14.3
       - run: gradle :teavm:buildJavaScript
+      - name: Prepare site
+        run: |
+          rm -rf teavm/build/dist/webapp/WEB-INF
+          touch teavm/build/dist/webapp/.nojekyll
       - uses: actions/upload-artifact@v4
         with:
           name: opacha-web
           path: teavm/build/dist/webapp
+          include-hidden-files: true
+
+  # Publishes the build to the gh-pages branch, served at https://<owner>.github.io/<repo>/
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/claude/opacha-browser-build-5pytjw'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: gh-pages
+      cancel-in-progress: true
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: opacha-web
+          path: site
+      - uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: site
+          publish_branch: gh-pages
+          force_orphan: true

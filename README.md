@@ -26,4 +26,7 @@ gradle :teavm:run               # build and serve at http://localhost:8080
 ```
 
 The `webapp` folder is a static site and can be hosted anywhere (GitHub Pages, itch.io, etc.).
-The `Web build` GitHub Actions workflow builds it on every push and uploads it as the `opacha-web` artifact.
+The `Web build` GitHub Actions workflow builds it on every push and publishes it to the `gh-pages` branch
+(GitHub Pages: Settings → Pages → Deploy from a branch → `gh-pages` / root).
+
+On desktop the game is shown in a centered portrait frame; on phones it fills the screen at native resolution.
